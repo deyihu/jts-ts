@@ -90,16 +90,16 @@ export class CoordinateList extends Array {
             const coordObject = (allowRepeated as Coordinate);
             const allow = start;
             if (!allow) {
-                let size = this.length;
+                let size = this.size();
                 if (size > 0) {
                     if (i > 0) {
-                        const prev: Coordinate = this[i - 1];
+                        const prev: Coordinate = this.get(i - 1);
                         if (prev.equals2D(coordObject)) {
                             return;
                         }
                     }
                     if (i < size) {
-                        const next: Coordinate = this[i];
+                        const next: Coordinate = this.get(i);
                         if (next.equals2D(coordObject)) return;
                     }
                 }
@@ -290,7 +290,7 @@ export class CoordinateList extends Array {
         const size = this.size();
         const pts: Array<Coordinate> = [];
         for (let i = 0; i < size; i++) {
-            pts[i] = this[(size - i - 1)];
+            pts[i] = this.get(size - i - 1);
         }
         return pts;
     }
