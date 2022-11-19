@@ -51,7 +51,7 @@ export class Coordinate {
      * In particular, used for the value of ordinates for dimensions 
      * greater than the defined dimension of a coordinate.
      */
-    public static NULL_ORDINATE: number = Number.NaN;
+    public static NULL_ORDINATE: number = NaN;
 
     /** Standard ordinate index value for, where X is 0 */
     public static X: number = 0;
@@ -219,7 +219,7 @@ export class Coordinate {
      *  @return the value of the measure, or <tt>NaN</tt>
      */
     public getM(): number {
-        return Number.NaN;
+        return NaN;
     }
 
     /**

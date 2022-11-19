@@ -6,3 +6,11 @@ export class NumberUtil {
     }
 
 }
+
+export function isNumber(value: any) {
+    return typeof value === 'number';
+}
+
+export function isUndefined(value: any) {
+    return value === undefined;
+}

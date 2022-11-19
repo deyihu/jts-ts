@@ -124,7 +124,7 @@ export class CoordinateXY extends Coordinate {
             case CoordinateXY.X: return this.x;
             case CoordinateXY.Y: return this.y;
         }
-        return Number.NaN;
+        return NaN;
         // disable for now to avoid regression issues
         //throw new IllegalArgumentException("Invalid ordinate index: " + ordinateIndex);
     }
