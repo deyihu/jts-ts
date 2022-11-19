@@ -7,10 +7,10 @@ export class NumberUtil {
 
 }
 
-export function isNumber(value: any) {
+export function isNumber(value: any): boolean {
     return typeof value === 'number';
 }
 
-export function isUndefined(value: any) {
+export function isUndefined(value: any): boolean {
     return value === undefined;
 }
