@@ -14,6 +14,8 @@
 import { Coordinate } from "./Coordinate";
 import { CoordinateList } from "./CoordinateList";
 import { Coordinates } from "./Coordinates";
+import { Envelope } from "./Envelope";
+import { MathUtil } from "./../math/MathUtil";
 
 // import java.lang.reflect.Array;
 // import java.util.Collection;
@@ -27,7 +29,7 @@ import { Coordinates } from "./Coordinates";
  *
  * @version 1.7
  */
-public class CoordinateArrays {
+export class CoordinateArrays {
     private static coordArrayType: Array<Coordinate> = [];
 
     private CoordinateArrays() {
@@ -387,7 +389,7 @@ public class CoordinateArrays {
      * @param destStart the destination index to start copying to
      * @param length    the number of items to copy
      */
-    public static copyDeep(src: Array<Coordinate>, srcStart?: number, dest?: Array<Coordinate>, destStart?: number, length: number): Array<Coordinate> | undefined {
+    public static copyDeep(src: Array<Coordinate>, srcStart?: number, dest?: Array<Coordinate>, destStart?: number, length?: number): Array<Coordinate> | undefined {
         if (srcStart === undefined) {
             const copy: Array<Coordinate> = [];
             for (let i = 0; i < src.length; i++) {
@@ -395,7 +397,7 @@ public class CoordinateArrays {
             }
             return copy;
         }
-        if (dest && destStart !== undefined) {
+        if (dest && destStart !== undefined && length !== undefined) {
             for (let i = 0; i < length; i++) {
                 dest[destStart + i] = src[srcStart + i].copy();
             }
@@ -492,18 +494,18 @@ public class CoordinateArrays {
      * @param coord the coordinate array to collapse
      * @return an array containing only non-null elements
      */
-    public static Coordinate[] removeNull(Coordinate[] coord) {
-    int nonNull = 0;
-        for (int i = 0; i < coord.length; i++) {
-            if (coord[i] != null) nonNull++;
+    public static removeNull(coord: Array<Coordinate>): Array<Coordinate> {
+        let nonNull = 0;
+        for (let i = 0; i < coord.length; i++) {
+            if (coord[i] !== null) nonNull++;
         }
-        Coordinate[] newCoord = new Coordinate[nonNull];
+        const newCoord: Array<Coordinate> = [];
         // empty case
-        if (nonNull == 0) return newCoord;
+        if (nonNull === 0) return newCoord;
 
-    int j = 0;
-        for (int i = 0; i < coord.length; i++) {
-            if (coord[i] != null) newCoord[j++] = coord[i];
+        let j = 0;
+        for (let i = 0; i < coord.length; i++) {
+            if (coord[i] !== null) newCoord[j++] = coord[i];
         }
         return newCoord;
     }
@@ -511,14 +513,14 @@ public class CoordinateArrays {
     /**
      * Reverses the coordinates in an array in-place.
      */
-    public static void reverse(Coordinate[] coord) {
+    public static reverse(coord: Array<Coordinate>) {
         if (coord.length <= 1)
             return;
-    
-    int last = coord.length - 1;
-    int mid = last / 2;
-        for (int i = 0; i <= mid; i++) {
-      Coordinate tmp = coord[i];
+
+        let last = coord.length - 1;
+        let mid = last / 2;
+        for (let i = 0; i <= mid; i++) {
+            const tmp = coord[i];
             coord[i] = coord[last - i];
             coord[last - i] = tmp;
         }
@@ -530,17 +532,15 @@ public class CoordinateArrays {
      *
      * @see Coordinate#equals(Object)
      */
-    public static boolean equals(
-        Coordinate[] coord1,
-        Coordinate[] coord2) {
-        if (coord1 == coord2) return true;
-        if (coord1 == null || coord2 == null) return false;
-        if (coord1.length != coord2.length) return false;
-        for (int i = 0; i < coord1.length; i++) {
-            if (!coord1[i].equals(coord2[i])) return false;
-        }
-        return true;
-    }
+    // public static equals(coord1: Array<Coordinate>, coord2: Array<Coordinate>): boolean {
+    //     if (coord1 === coord2) return true;
+    //     if (coord1 === null || coord2 === null) return false;
+    //     if (coord1.length !== coord2.length) return false;
+    //     for (let i = 0; i < coord1.length; i++) {
+    //         if (!coord1[i].equals(coord2[i])) return false;
+    //     }
+    //     return true;
+    // }
 
     /**
      * Returns true if the two arrays are identical, both null, or pointwise
@@ -550,15 +550,21 @@ public class CoordinateArrays {
      * @param coord2               an array of Coordinates
      * @param coordinateComparator a Comparator for Coordinates
      */
-    public static boolean equals(
-        Coordinate[] coord1,
-        Coordinate[] coord2,
-        Comparator coordinateComparator) {
+    public static equals(coord1: Array<Coordinate>, coord2: Array<Coordinate>, coordinateComparator): boolean {
+        if (coordinateComparator === undefined) {
+            if (coord1 === coord2) return true;
+            if (coord1 === null || coord2 === null) return false;
+            if (coord1.length !== coord2.length) return false;
+            for (let i = 0; i < coord1.length; i++) {
+                if (!coord1[i].equals(coord2[i])) return false;
+            }
+            return true;
+        }
         if (coord1 == coord2) return true;
         if (coord1 == null || coord2 == null) return false;
         if (coord1.length != coord2.length) return false;
-        for (int i = 0; i < coord1.length; i++) {
-            if (coordinateComparator.compare(coord1[i], coord2[i]) != 0)
+        for (let i = 0; i < coord1.length; i++) {
+            if (coordinateComparator.compare(coord1[i], coord2[i]) !== 0)
                 return false;
         }
         return true;
@@ -571,14 +577,56 @@ public class CoordinateArrays {
      * @return the minimum coordinate in the array, found using <code>compareTo</code>
      * @see Coordinate#compareTo(Coordinate)
      */
-    public static Coordinate minCoordinate(Coordinate[] coordinates) {
-    Coordinate minCoord = null;
-        for (int i = 0; i < coordinates.length; i++) {
-            if (minCoord == null || minCoord.compareTo(coordinates[i]) > 0) {
+    public static minCoordinate(coordinates: Array<Coordinate>): Coordinate {
+        let minCoord: Coordinate = coordinates[0];
+        for (let i = 0; i < coordinates.length; i++) {
+            if (undefined === minCoord || minCoord.compareTo(coordinates[i]) > 0) {
                 minCoord = coordinates[i];
             }
         }
         return minCoord;
+    }
+
+    /**
+   * Shifts the positions of the coordinates until the coordinate
+   * at <code>indexOfFirstCoordinate</code> is first.
+   * <p/>
+   * If {@code ensureRing} is {@code true}, first and last
+   * coordinate of the returned array are equal.
+   *
+   * @param coordinates            the array to rearrange
+   * @param indexOfFirstCoordinate the index of the coordinate to make first
+   * @param ensureRing             flag indicating if returned array should form a ring.
+   */
+    public static scroll(coordinates: Array<Coordinate>, indexOfFirstCoordinate: number | Coordinate, ensureRing?: boolean) {
+        if (indexOfFirstCoordinate instanceof Coordinate) {
+            indexOfFirstCoordinate = CoordinateArrays.indexOf(indexOfFirstCoordinate, coordinates);
+        }
+        if (ensureRing === undefined) {
+            ensureRing = CoordinateArrays.isRing(coordinates);
+        }
+        let i = indexOfFirstCoordinate;
+        if (i <= 0) return;
+
+        const newCoordinates: Array<Coordinate> = [];
+        if (!ensureRing) {
+            // System.arraycopy(coordinates, i, newCoordinates, 0, coordinates.length - i);
+            // System.arraycopy(coordinates, 0, newCoordinates, coordinates.length - i, i);
+            arraycopy(coordinates, i, newCoordinates, 0, coordinates.length - i);
+            arraycopy(coordinates, 0, newCoordinates, coordinates.length - i, i);
+        } else {
+            let last = coordinates.length - 1;
+
+            // fill in values
+            let j;
+            for (j = 0; j < last; j++)
+                newCoordinates[j] = coordinates[(i + j) % last];
+
+            // Fix the ring (first == last)
+            newCoordinates[j] = newCoordinates[0].copy();
+        }
+        // System.arraycopy(newCoordinates, 0, coordinates, 0, coordinates.length);
+        arraycopy(newCoordinates, 0, coordinates, 0, coordinates.length);
     }
 
     /**
@@ -588,10 +636,10 @@ public class CoordinateArrays {
      * @param coordinates     the array to rearrange
      * @param firstCoordinate the coordinate to make first
      */
-    public static void scroll(Coordinate[] coordinates, Coordinate firstCoordinate) {
-    int i = indexOf(firstCoordinate, coordinates);
-        scroll(coordinates, i);
-    }
+    // public static void scroll(Coordinate[] coordinates, Coordinate firstCoordinate) {
+    // int i = indexOf(firstCoordinate, coordinates);
+    //     scroll(coordinates, i);
+    // }
 
     /**
      * Shifts the positions of the coordinates until the coordinate
@@ -600,9 +648,9 @@ public class CoordinateArrays {
      * @param coordinates            the array to rearrange
      * @param indexOfFirstCoordinate the index of the coordinate to make first
      */
-    public static void scroll(Coordinate[] coordinates, int indexOfFirstCoordinate) {
-        scroll(coordinates, indexOfFirstCoordinate, CoordinateArrays.isRing(coordinates));
-    }
+    // public static void scroll(Coordinate[] coordinates, int indexOfFirstCoordinate) {
+    //     scroll(coordinates, indexOfFirstCoordinate, CoordinateArrays.isRing(coordinates));
+    // }
 
     /**
      * Shifts the positions of the coordinates until the coordinate
@@ -615,27 +663,27 @@ public class CoordinateArrays {
      * @param indexOfFirstCoordinate the index of the coordinate to make first
      * @param ensureRing             flag indicating if returned array should form a ring.
      */
-    public static void scroll(Coordinate[] coordinates, int indexOfFirstCoordinate, boolean ensureRing) {
-    int i = indexOfFirstCoordinate;
-        if (i <= 0) return;
+    // public static void scroll(Coordinate[] coordinates, int indexOfFirstCoordinate, boolean ensureRing) {
+    // int i = indexOfFirstCoordinate;
+    //     if (i <= 0) return;
 
-        Coordinate[] newCoordinates = new Coordinate[coordinates.length];
-        if (!ensureRing) {
-            System.arraycopy(coordinates, i, newCoordinates, 0, coordinates.length - i);
-            System.arraycopy(coordinates, 0, newCoordinates, coordinates.length - i, i);
-        } else {
-      int last = coordinates.length - 1;
+    //     Coordinate[] newCoordinates = new Coordinate[coordinates.length];
+    //     if (!ensureRing) {
+    //         System.arraycopy(coordinates, i, newCoordinates, 0, coordinates.length - i);
+    //         System.arraycopy(coordinates, 0, newCoordinates, coordinates.length - i, i);
+    //     } else {
+    //   int last = coordinates.length - 1;
 
-      // fill in values
-      int j;
-            for (j = 0; j < last; j++)
-                newCoordinates[j] = coordinates[(i + j) % last];
+    //   // fill in values
+    //   int j;
+    //         for (j = 0; j < last; j++)
+    //             newCoordinates[j] = coordinates[(i + j) % last];
 
-            // Fix the ring (first == last)
-            newCoordinates[j] = newCoordinates[0].copy();
-        }
-        System.arraycopy(newCoordinates, 0, coordinates, 0, coordinates.length);
-    }
+    //         // Fix the ring (first == last)
+    //         newCoordinates[j] = newCoordinates[0].copy();
+    //     }
+    //     System.arraycopy(newCoordinates, 0, coordinates, 0, coordinates.length);
+    // }
 
     /**
      * Returns the index of <code>coordinate</code> in <code>coordinates</code>.
@@ -668,20 +716,20 @@ public class CoordinateArrays {
      * @param end   the index of the end of the subsequence to extract
      * @return a subsequence of the input array
      */
-    public static Coordinate[] extract(Coordinate[] pts, int start, int end) {
+    public static extract(pts: Array<Coordinate>, start: number, end: number): Array<Coordinate> {
         start = MathUtil.clamp(start, 0, pts.length);
         end = MathUtil.clamp(end, -1, pts.length);
 
-    int npts = end - start + 1;
+        let npts = end - start + 1;
         if (end < 0) npts = 0;
         if (start >= pts.length) npts = 0;
         if (end < start) npts = 0;
 
-        Coordinate[] extractPts = new Coordinate[npts];
+        const extractPts: Array<Coordinate> = [];
         if (npts == 0) return extractPts;
 
-    int iPts = 0;
-        for (int i = start; i <= end; i++) {
+        let iPts = 0;
+        for (let i = start; i <= end; i++) {
             extractPts[iPts++] = pts[i];
         }
         return extractPts;
@@ -693,9 +741,9 @@ public class CoordinateArrays {
      * @param coordinates the coordinates to scan
      * @return the envelope of the coordinates
      */
-    public static Envelope envelope(Coordinate[] coordinates) {
-    Envelope env = new Envelope();
-        for (int i = 0; i < coordinates.length; i++) {
+    public static envelope(coordinates: Array<Coordinate>): Envelope {
+        const env = new Envelope();
+        for (let i = 0; i < coordinates.length; i++) {
             env.expandToInclude(coordinates[i]);
         }
         return env;
@@ -708,14 +756,23 @@ public class CoordinateArrays {
      * @param env         the envelope to intersect with
      * @return an array of the coordinates which intersect the envelope
      */
-    public static Coordinate[] intersection(Coordinate[] coordinates, Envelope env) {
-    CoordinateList coordList = new CoordinateList();
-        for (int i = 0; i < coordinates.length; i++) {
+    public static intersection(coordinates: Array<Coordinate>, env: Envelope): Array<Coordinate> {
+        const coordList = new CoordinateList();
+        for (let i = 0; i < coordinates.length; i++) {
             if (env.intersects(coordinates[i]))
                 coordList.add(coordinates[i], true);
         }
         return coordList.toCoordinateArray();
     }
 
+}
+
+function arraycopy(coordinates: Array<Coordinate>, srcPos: number, dest: Array<Coordinate>, destPos: number, length: number) {
+    const len = srcPos + length;
+    let idx = destPos;
+    for (let i = srcPos; i < len; i++) {
+        dest[idx] = coordinates[i];
+        idx++;
+    }
 }
 
