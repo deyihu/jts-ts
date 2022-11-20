@@ -11,6 +11,12 @@
  */
 // package org.locationtech.jts.algorithm;
 
+import { Coordinate } from "../geom/Coordinate";
+import { CoordinateSequence } from "../geom/CoordinateSequence";
+import { Area } from './Area';
+import { CoordinateArraySequence } from './../geom/impl/CoordinateArraySequence';
+import { CGAlgorithmsDD } from './CGAlgorithmsDD';
+
 // import org.locationtech.jts.geom.Coordinate;
 // import org.locationtech.jts.geom.CoordinateSequence;
 // import org.locationtech.jts.geom.impl.CoordinateArraySequence;
@@ -72,7 +78,7 @@ export class Orientation {
      *         1 ( {@link #COUNTERCLOCKWISE} or {@link #LEFT} ) if q is counter-clockwise (left) from p1-p2;
      *         0 ( {@link #COLLINEAR} or {@link #STRAIGHT} ) if q is collinear with p1-p2
      */
-    public static int index(Coordinate p1, Coordinate p2, Coordinate q) {
+    public static index(p1: Coordinate, p2: Coordinate, q: Coordinate): number {
         /*
          * MD - 9 Aug 2010 It seems that the basic algorithm is slightly orientation
          * dependent, when computing the orientation of a point very close to a
@@ -122,10 +128,10 @@ export class Orientation {
      * @return true if the ring is oriented counter-clockwise.
      * @throws IllegalArgumentException if there are too few points to determine orientation (&lt; 4)
      */
-    public static boolean isCCW(Coordinate[] ring) {
-        // wrap with an XY CoordinateSequence
-        return isCCW(new CoordinateArraySequence(ring, 2, 0));
-    }
+    // public static boolean isCCW(Coordinate[] ring) {
+    //     // wrap with an XY CoordinateSequence
+    //     return isCCW(new CoordinateArraySequence(ring, 2, 0));
+    // }
 
     /**
      * Tests if a ring defined by a {@link CoordinateSequence} is
@@ -145,26 +151,29 @@ export class Orientation {
      * @param ring a CoordinateSequence forming a ring (with first and last point identical)
      * @return true if the ring is oriented counter-clockwise.
      */
-    public static boolean isCCW(CoordinateSequence ring) {
-    // # of points without closing endpoint
-    int nPts = ring.size() - 1;
+    public static isCCW(ring: CoordinateSequence | Array<Coordinate>): boolean {
+        // # of points without closing endpoint
+        if (!(ring instanceof CoordinateSequence)) {
+            ring = new CoordinateArraySequence(ring, 2, 0);
+        }
+        let nPts = ring.size() - 1;
         // return default value if ring is flat
         if (nPts < 3) return false;
 
-    /**
-     * Find first highest point after a lower point, if one exists
-     * (e.g. a rising segment)
-     * If one does not exist, hiIndex will remain 0
-     * and the ring must be flat.
-     * Note this relies on the convention that
-     * rings have the same start and end point. 
-     */
-    Coordinate upHiPt = ring.getCoordinate(0);
-    double prevY = upHiPt.y;
-    Coordinate upLowPt = null;
-    int iUpHi = 0;
-        for (int i = 1; i <= nPts; i++) {
-      double py = ring.getOrdinate(i, Coordinate.Y);
+        /**
+         * Find first highest point after a lower point, if one exists
+         * (e.g. a rising segment)
+         * If one does not exist, hiIndex will remain 0
+         * and the ring must be flat.
+         * Note this relies on the convention that
+         * rings have the same start and end point. 
+         */
+        let upHiPt = ring.getCoordinate(0);
+        let prevY = upHiPt.y;
+        let upLowPt: any;
+        let iUpHi = 0;
+        for (let i = 1; i <= nPts; i++) {
+            const py = ring.getOrdinate(i, Coordinate.Y);
             /**
              * If segment is upwards and endpoint is higher, record it
              */
@@ -180,19 +189,19 @@ export class Orientation {
          */
         if (iUpHi == 0) return false;
 
-    /**
-     * Find the next lower point after the high point
-     * (e.g. a falling segment).
-     * This must exist since ring is not flat.
-     */
-    int iDownLow = iUpHi;
+        /**
+         * Find the next lower point after the high point
+         * (e.g. a falling segment).
+         * This must exist since ring is not flat.
+         */
+        let iDownLow = iUpHi;
         do {
             iDownLow = (iDownLow + 1) % nPts;
         } while (iDownLow != iUpHi && ring.getOrdinate(iDownLow, Coordinate.Y) == upHiPt.y);
 
-    Coordinate downLowPt = ring.getCoordinate(iDownLow);
-    int iDownHi = iDownLow > 0 ? iDownLow - 1 : nPts - 1;
-    Coordinate downHiPt = ring.getCoordinate(iDownHi);
+        let downLowPt = ring.getCoordinate(iDownLow);
+        let iDownHi = iDownLow > 0 ? iDownLow - 1 : nPts - 1;
+        let downHiPt = ring.getCoordinate(iDownHi);
 
         /**
          * Two cases can occur:
@@ -213,19 +222,19 @@ export class Orientation {
             if (upLowPt.equals2D(upHiPt) || downLowPt.equals2D(upHiPt) || upLowPt.equals2D(downLowPt))
                 return false;
 
-      /**
-       * It can happen that the top segments are coincident.
-       * This is an invalid ring, which cannot be computed correctly.
-       * In this case the orientation is 0, and the result is false.
-       */
-      int index = index(upLowPt, upHiPt, downLowPt);
-            return index == COUNTERCLOCKWISE;
+            /**
+             * It can happen that the top segments are coincident.
+             * This is an invalid ring, which cannot be computed correctly.
+             * In this case the orientation is 0, and the result is false.
+             */
+            let index = Orientation.index(upLowPt, upHiPt, downLowPt);
+            return index == Orientation.COUNTERCLOCKWISE;
         }
         else {
-      /**
-       * Flat cap - direction of flat top determines orientation
-       */
-      double delX = downHiPt.x - upHiPt.x;
+            /**
+             * Flat cap - direction of flat top determines orientation
+             */
+            let delX = downHiPt.x - upHiPt.x;
             return delX < 0;
         }
     }
@@ -254,7 +263,7 @@ export class Orientation {
      * @param ring an array of Coordinates forming a ring (with first and last point identical)
      * @return true if the ring is oriented counter-clockwise.
      */
-    public static boolean isCCWArea(Coordinate[] ring) {
+    public static isCCWArea(ring: Array<Coordinate>): boolean {
         return Area.ofRingSigned(ring) < 0;
     }
 }
