@@ -14,3 +14,7 @@ export function isNumber(value: any): boolean {
 export function isUndefined(value: any): boolean {
     return value === undefined;
 }
+
+export function isInfinite(value: number) {
+    return value > -Infinity && value < Infinity;
+}
