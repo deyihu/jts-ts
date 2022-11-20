@@ -25,7 +25,7 @@ class DecimalFormat {
     }
     format(value) {
         return value;
-    }
+    } 
 }
 /**
  * Formats numeric values for ordinates
